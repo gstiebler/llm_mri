@@ -11,6 +11,31 @@ pipeline = pipeline(
     device_map="auto",
 )
 
+
+
+# Step 1: Define a container to hold the activations
+activations = {}
+
+# Step 2: Define a hook function
+def hook_fn(m, i, o):
+  activations[m] = o.detach()
+
+# Step 3: Attach the hook to each layer
+for name, layer in pipeline.model.named_modules():
+  layer.register_forward_hook(hook_fn)
+
+'''
+activations = {}
+def get_activation(name):
+    def hook(model, input, output):
+        activations[name] = output.detach()
+    return hook
+  
+# Assuming you want to attach hooks to all transformer layers
+for i, layer in enumerate(pipeline.model.transformer.h):
+    layer.register_forward_hook(get_activation(f"layer_{i}"))
+'''
+
 messages = [
     {"role": "user", "content": "Who are you? Please, answer in pirate-speak."},
 ]
