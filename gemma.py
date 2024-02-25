@@ -1,6 +1,8 @@
 from transformers import AutoTokenizer, pipeline
 import torch
 
+import matplotlib.pyplot as plt
+
 model = "google/gemma-2b-it"
 
 tokenizer = AutoTokenizer.from_pretrained(model)
@@ -12,40 +14,51 @@ pipeline = pipeline(
 )
 
 
-
 # Step 1: Define a container to hold the activations
 activations = {}
 
 # Step 2: Define a hook function
-def hook_fn(m, i, o):
-  activations[m] = o.detach()
+def get_activation(name):
+    def hook(model, input, output):
+        print("Executing hook for layer:", name)
+        activations[name] = output[0].detach()
+    return hook
 
 # Step 3: Attach the hook to each layer
 for name, layer in pipeline.model.named_modules():
-  layer.register_forward_hook(hook_fn)
-
-'''
-activations = {}
-def get_activation(name):
-    def hook(model, input, output):
-        activations[name] = output.detach()
-    return hook
-  
-# Assuming you want to attach hooks to all transformer layers
-for i, layer in enumerate(pipeline.model.transformer.h):
-    layer.register_forward_hook(get_activation(f"layer_{i}"))
-'''
+    '''
+    print("")
+    print(name)
+    print("------*********------")
+    print(layer)
+    print("------*********------")
+    print("------*********------")
+    print("------*********------")
+    print("------*********------")
+    '''
+    if layer.__class__.__name__ == "GemmaMLP":
+        layer.register_forward_hook(get_activation(name))
 
 messages = [
-    {"role": "user", "content": "Who are you? Please, answer in pirate-speak."},
+    {"role": "user", "content": "love or hate? Print only one of these 2 words, nothing else."},
 ]
 prompt = pipeline.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
 outputs = pipeline(
     prompt,
-    max_new_tokens=256,
+    max_new_tokens=2,
     do_sample=True,
-    temperature=0.7,
+    temperature=0.1,
     top_k=50,
     top_p=0.95
 )
 print(outputs[0]["generated_text"][len(prompt):])
+
+for layer_name, activation in activations.items():
+    print("Layer:", layer_name)
+    float_list = activation.view(-1).tolist()
+    float_list.sort()
+    plt.plot(float_list) 
+    plt.xlabel('Index') 
+    plt.ylabel('Value') 
+    plt.title(layer_name) 
+    plt.show()
