@@ -2,6 +2,9 @@ from transformers import AutoTokenizer, pipeline
 import torch
 
 import matplotlib.pyplot as plt
+import pandas as pd
+import scipy.stats
+
 
 model = "google/gemma-2b-it"
 
@@ -22,6 +25,7 @@ activations = [{}, {}]
 def get_activation(name):
     def hook(model, input, output):
         # print("Executing hook for layer:", name)
+        print("Output shape:", output.shape)
         tensor = output[0].detach()
         if name in activations[index]:
             activations[index][name].append(tensor)
@@ -45,8 +49,8 @@ for name, layer in pipeline.model.named_modules():
         layer.register_forward_hook(get_activation(name))
 
 messages = [
-    "What emotion is better: love or hate? Print only one of these 2 words, nothing else.",
-    "What's the capital of France? Print only one word, nothing else."
+    "What's the capital of France? Print only one word, nothing else.",
+    "What's the capital of Germany? Print only one word, nothing else."
 ]
 
 for i in range(2):
@@ -68,7 +72,7 @@ for i in range(2):
     print(generated[len_input:])
 
 
-
+correlations = []
 for layer_name, value in activations[0].items():
     activation1 = activations[0][layer_name][1]
     activation2 = activations[1][layer_name][1]
@@ -84,6 +88,10 @@ for layer_name, value in activations[0].items():
     float_list2 = activation2.view(-1).tolist()
     values2 = [float_list2[item[1]] for item in float_list_with_indexes]
     
+    correlation = scipy.stats.pearsonr(sorted_values1, values2)[0]
+    print("Correlation:", correlation)
+    correlations.append(correlation)
+    
     plt.plot(sorted_values1, label='Activation 1')
     plt.plot(values2, label='Activation 2')
     plt.xlabel('Index')
@@ -92,3 +100,9 @@ for layer_name, value in activations[0].items():
     plt.legend()
     plt.show()
 
+plt.plot(correlations, label='correlation')
+plt.xlabel('Index')
+plt.ylabel('Value')
+plt.title('correlations')
+plt.legend()
+plt.show()
