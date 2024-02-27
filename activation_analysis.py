@@ -6,8 +6,10 @@ import pandas as pd
 import scipy.stats
 
 
+# Load the GEMM-2b model
 model = "google/gemma-2b-it"
 
+# Initialize the tokenizer and pipeline
 tokenizer = AutoTokenizer.from_pretrained(model)
 pipeline = pipeline(
     "text-generation",
@@ -35,16 +37,6 @@ def get_activation(name):
 
 # Step 3: Attach the hook to each layer
 for name, layer in pipeline.model.named_modules():
-    '''
-    print("")
-    print(name)
-    print("------*********------")
-    print(layer)
-    print("------*********------")
-    print("------*********------")
-    print("------*********------")
-    print("------*********------")
-    '''
     if layer.__class__.__name__ == "GemmaMLP":
         layer.register_forward_hook(get_activation(name))
 
