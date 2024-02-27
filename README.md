@@ -24,18 +24,36 @@ pip install torch transformers matplotlib pandas scipy
 
 ## Setup and Execution
 
-1. **Clone the repository:**
+1. **Clone the Project Repository:**
 
    ```sh
-   git clone <repository-url>
-   cd <repository-directory>
+   git clone https://github.com/gstiebler/llm_mri.git
+   cd llm_mri
    ```
 
-2. **Run the script:**
+2. **Install Hugging Face Transformers CLI:**
+
+   Before running the script, ensure you have the Hugging Face CLI installed and configured to download models. Follow the instructions at [Hugging Face CLI Guide](https://huggingface.co/docs/huggingface_hub/main/en/guides/cli) to set up the CLI.
+
+3. **Download the GEMM-2b Model:**
+
+   With the Hugging Face CLI set up, download the `google/gemma-2b-it` model by running the following command:
+
+   ```sh
+   huggingface-cli repo download google/gemma-2b-it --repo-type model
+   ```
+
+   This step ensures that the required model is available locally for the analysis script.
+
+4. **Run the Script:**
+
+   After setting up the CLI and downloading the model, you can run the analysis script with:
 
    ```sh
    python activation_analysis.py
    ```
+
+This script will execute the analysis, comparing activation patterns across different prompts, and generate the corresponding visualizations and outputs.
 
 ## Understanding the Outputs
 
